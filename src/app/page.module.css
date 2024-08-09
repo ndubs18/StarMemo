@@ -19,11 +19,18 @@
 
 #memoList {
   text-align: center;
+  padding: 0 4rem;
 }
 
-#textarea {
+#memoText {
   height: 200px;
   width: 100%;
+  padding: 1rem;
+  resize: none;
+}
+
+#textarea:focus {
+  outline: none;;
 }
 
 #formBtns {
@@ -36,5 +43,13 @@
 
 #formBtns input {
   width: 5rem;
+}
+
+.memoItem {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
