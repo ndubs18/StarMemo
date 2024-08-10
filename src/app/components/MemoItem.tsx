@@ -13,7 +13,7 @@ export let MemoItem = ({memoItem, memos, setMemos} : {memoItem : Memo, memos: Me
 
     return (
         <li className={styles.memoItem}>
-            {memoItem.memo}
+            <p>#{memoItem.id + 1}{' ' + memoItem.createdDate}{' '+memoItem.memo}</p>
             <button onClick={removeMemo}>X</button> 
         </li>
     )
