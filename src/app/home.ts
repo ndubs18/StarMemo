@@ -1,4 +1,18 @@
-function formatDate(date : Date) {
+import { Memo } from "./types/home"
+
+let setSpeechEventListeners = (recognition : any, setMemoInputText : (memos : string) => void) => {
+    recognition.addEventListener("audiostart", (event : Event)=>{
+        console.log("Listening...")
+      })
+      recognition.addEventListener("audioend", (event : Event)=>{
+        console.log("Not listening")
+      })
+      recognition.addEventListener("result", (event : any) => {
+        const words = event.results[0][0].transcript;
+        setMemoInputText(words);
+})}
+
+let formatDate = (date : Date) => {
     let newDate = '';
     let month = date.getMonth() + 1;
     let day = date.getDate();
@@ -33,4 +47,6 @@ function formatDate(date : Date) {
 
   }
 
-  export {formatDate}
+
+
+  export {formatDate, setSpeechEventListeners}

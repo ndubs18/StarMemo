@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { MemoItem } from './components/MemoItem'
 
 //functions
-import { formatDate } from './home';
+import { formatDate, setSpeechEventListeners } from './home';
 
 import Image from "next/image";
 import styles from "./page.module.css";
@@ -24,41 +24,42 @@ declare global {
   }
 }
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
 // const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
 // const SpeechRecognitionEvent = window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
 
 
 export default function Home() {
 
+  //TODO: I don't really like these being variables (not constants), is there a better way to initialize these?
+  //! When defining these globally we get the error "window" not defined and this was a temp workaround
+  let SpeechRecognition = null;
+  let recognition: any = null;
+  let SpeechGrammarList  = null;
+  let SpeechRecognitionEvent  = null;
+
   let [memos, setMemos] = useState<Memo[]>([]);
   let [memoInputText, setMemoInputText] = useState('');
 
-  function getInput(formData : any) {
+  function addMemo(formData : any) {
     let id = memos.length;
-    const input = formData.get('input');
+    const input = formData.get('memoInput');
     
     let newMemo : Memo = {
       id: id,
       memo: input,
       createdDate: formatDate(new Date())
     }
-    setMemos([...memos, newMemo])
+    setMemoInputText('');
+    setMemos((memos) => {
+      return [...memos, newMemo]})
   }
 
   useEffect(() => {
-    recognition.addEventListener("audiostart", (event : Event)=>{
-      console.log("Listening...")
-    })
-    recognition.addEventListener("audioend", (event : Event)=>{
-      console.log("Not listening")
-    })
-    recognition.addEventListener("result", (event : any) => {
-      const words = event.results[0][0].transcript;
-      let textElement = document.getElementsByName('input')[0];
-      setMemoInputText(words);
-    })
+    SpeechRecognition = window?.SpeechRecognition || window?.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+
+    setSpeechEventListeners(recognition, setMemoInputText)
+    
   }, [])
 
   return (
@@ -69,12 +70,14 @@ export default function Home() {
       
       <section>
         <div id={styles.memoForm}>
-          <form action={getInput}>
-            <label> Memo Input
-            <textarea id={styles.memoText} name="input" value={memoInputText} onChange={e => setMemoInputText(e.target.value)} required></textarea>
-            </label>
+          <form action={addMemo}>
+            <textarea id={styles.memoText} name="memoInput" value={memoInputText} onChange={e => setMemoInputText(e.target.value)} placeholder = "Type or record your memo..." required></textarea>
             <div id={styles.formBtns}>          
-              <input type="button" id="recordBtn" value='record' onClick={()=> {
+              <input type="button" id="recordBtn" value='record' onClick={(e)=> {
+                //! This tells us the record button was hit
+                console.log(e.target);
+                //! This will trigger the audiostart event (handler in ./home.ts) maybe
+                //! we can add some logic to the result to determine whether it's a commant or just input text?
                 recognition.start();
               }}></input>
               <input type="reset" value="reset" onClick={() => {setMemoInputText('')}}></input>
@@ -86,7 +89,9 @@ export default function Home() {
           {memos?.map( memo => <MemoItem key={memo.id} memoItem={memo} memos={memos} setMemos={setMemos}></MemoItem>)}   
         </ul> 
       </section>
-      <button style={{marginTop: "15rem"}}>Activate Voice</button>
+      <button style={{marginTop: "15rem"}} onClick={(e) => {
+        console.log(e.target);
+      }}>Activate Voice Commands</button>
       <footer></footer>
     </main>
   );
