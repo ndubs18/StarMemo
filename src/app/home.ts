@@ -1,16 +1,50 @@
 import { Memo } from "./types/home"
 
 let setSpeechEventListeners = (recognition : any, setMemoInputText : (memos : string) => void) => {
-    recognition.addEventListener("audiostart", (event : Event)=>{
-        console.log("Listening...")
+    
+      let recordBtn = document.getElementById('recordBtn');
+      let voiceActivatedBtn = document.getElementById('voiceActivateBtn');
+      recordBtn?.addEventListener("customRecordEvent", (event : Event) => {
+      console.log("initiated by record button...");
+      
+      recognition.addEventListener("audiostart", (event : Event) => {
+        console.log("Listening from recording button...")
+        let {target} = event;
+        console.log(target);
+      
       })
-      recognition.addEventListener("audioend", (event : Event)=>{
-        console.log("Not listening")
+      recognition.addEventListener("audioend", (event : Event) => {
+        console.log("Ending recording...")
       })
       recognition.addEventListener("result", (event : any) => {
         const words = event.results[0][0].transcript;
         setMemoInputText(words);
-})}
+      })
+      
+      recognition.start();
+    });
+
+    voiceActivatedBtn?.addEventListener('customVoiceActivationEvent', (event : Event) => {
+
+      recognition.addEventListener("audiostart", (event : Event) => {
+        console.log("Listening from voice activated...")
+        let {target} = event;
+        console.log(target);
+      
+      })
+      recognition.addEventListener("audioend", (event : Event) => {
+        console.log("Ending recording from voice activated...")
+      })
+      recognition.addEventListener("result", (event : any) => {
+        const words = event.results[0][0].transcript;
+        console.log(words);
+      })
+
+      recognition.start();
+      
+    })
+
+}
 
 let formatDate = (date : Date) => {
     let newDate = '';

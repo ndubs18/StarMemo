@@ -39,6 +39,10 @@ export default function Home() {
 
   let [memos, setMemos] = useState<Memo[]>([]);
   let [memoInputText, setMemoInputText] = useState('');
+  let [voiceActivated, setVoiceActivated] = useState(false);
+
+  let recordEvent = new Event('customRecordEvent');
+  let voiceActivationEvent = new Event('customVoiceActivationEvent');
 
   function addMemo(formData : any) {
     let id = memos.length;
@@ -58,6 +62,7 @@ export default function Home() {
     SpeechRecognition = window?.SpeechRecognition || window?.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
 
+    //this sets event handlers with custom event depending on recording or voice activation
     setSpeechEventListeners(recognition, setMemoInputText)
     
   }, [])
@@ -77,8 +82,10 @@ export default function Home() {
                 //! This tells us the record button was hit
                 console.log(e.target);
                 //! This will trigger the audiostart event (handler in ./home.ts) maybe
-                //! we can add some logic to the result to determine whether it's a commant or just input text?
-                recognition.start();
+                //! we can add some logic to the result to determine whether it's a command or just input text?
+                e.target.dispatchEvent(recordEvent);
+
+                //recognition.start();
               }}></input>
               <input type="reset" value="reset" onClick={() => {setMemoInputText('')}}></input>
               <input type="submit" value="submit"></input>
@@ -89,9 +96,10 @@ export default function Home() {
           {memos?.map( memo => <MemoItem key={memo.id} memoItem={memo} memos={memos} setMemos={setMemos}></MemoItem>)}   
         </ul> 
       </section>
-      <button style={{marginTop: "15rem"}} onClick={(e) => {
-        console.log(e.target);
-      }}>Activate Voice Commands</button>
+      <button id="voiceActivateBtn" style={{marginTop: "15rem"}} onClick={(e) => {
+        setVoiceActivated(!voiceActivated);
+        e.target.dispatchEvent(voiceActivationEvent);
+      }}>{!voiceActivated ? "Activate Voice Commands" : "Activated"}</button>
       <footer></footer>
     </main>
   );
