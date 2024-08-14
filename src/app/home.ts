@@ -1,47 +1,97 @@
 import { Memo } from "./types/home"
 
-let setSpeechEventListeners = (recognition : any, setMemoInputText : (memos : string) => void) => {
-    
-      let recordBtn = document.getElementById('recordBtn');
-      let voiceActivatedBtn = document.getElementById('voiceActivateBtn');
+
+const commands = [
+  "record",
+  "note",
+  "reset",
+  "clear",
+  "submit",
+  "save",
+]
+
+const grammar = `#JSGF V1.0; grammar colors; public <commands> = ${commands.join(
+  " | ",
+)};`;
+
+let webSpeechInit= (recognition : any, speechRecognitionList : any, isActivated : boolean, setMemoInputText : (memos : string) => void, setIsActivated : (isActivated : boolean) => void) => {
+
+
+      //button elements
+      let recordBtn = document.getElementById("recordBtn");
+      let resetBtn = document.getElementById("reset")
+      let submitBtn = document.getElementById("submit");
+      let voiceActivateBtn = document.getElementById("voiceActivateBtn");
+
+      //record
       recordBtn?.addEventListener("customRecordEvent", (event : Event) => {
       console.log("initiated by record button...");
       
-      recognition.addEventListener("audiostart", (event : Event) => {
+      recognition.addEventListener("audiostart", function recordStart(event : Event) {
         console.log("Listening from recording button...")
-        let {target} = event;
-        console.log(target);
+        removeEventListener('audiostart', recordStart)
       
       })
-      recognition.addEventListener("audioend", (event : Event) => {
+
+      recognition.addEventListener("audioend", function recordEnd(event : Event) {
         console.log("Ending recording...")
+        removeEventListener('audiostart', recordEnd)
       })
-      recognition.addEventListener("result", (event : any) => {
+
+      recognition.addEventListener("result", function recordResult(event : any) {
         const words = event.results[0][0].transcript;
         setMemoInputText(words);
+        removeEventListener('audiostart', recordResult)
       })
       
       recognition.start();
     });
+    
+    //voice activation
+    voiceActivateBtn?.addEventListener('customVoiceActivationEvent', (event : Event) => {
+      
+      //grammar list config
+      speechRecognitionList.addFromString(grammar,1);
+      recognition.grammars = speechRecognitionList;
+      recognition.continuous = false;
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-    voiceActivatedBtn?.addEventListener('customVoiceActivationEvent', (event : Event) => {
-
-      recognition.addEventListener("audiostart", (event : Event) => {
-        console.log("Listening from voice activated...")
-        let {target} = event;
-        console.log(target);
+      recognition.addEventListener("audiostart", function voiceActivateStart(event : Event) {
+        console.log("Listening from voice activated...") 
+        removeEventListener('audiostart', voiceActivateStart)
       
       })
-      recognition.addEventListener("audioend", (event : Event) => {
+
+      recognition.addEventListener("audioend", function voiceActivateEnd(event : Event) {
         console.log("Ending recording from voice activated...")
+        removeEventListener('audiostart', voiceActivateEnd); 
       })
-      recognition.addEventListener("result", (event : any) => {
-        const words = event.results[0][0].transcript;
-        console.log(words);
+
+      recognition.addEventListener("result", function voiceActivateResult(event : any) { 
+        const word = event.results[0][0].transcript;
+
+        if(word === "record" || word == "note") {
+          console.log(`User said: ${word}`);
+          setTimeout(()=> recordBtn?.click(), 1000);
+        }
+        else if (word === "reset" || word === "clear" ) {
+          console.log(`User said ${word}`);
+          setTimeout(()=> resetBtn?.click(), 1000);
+        }
+        else if (word === "submit" || word === "save") {
+          setTimeout(() => submitBtn?.click(), 1000);
+        }
+        //voiceActivateBtn.click();
+        removeEventListener('result', voiceActivateResult);
+      })
+
+      recognition.addEventListener("nomatch", (event : Event) => {
+        console.log("command not recognized");
       })
 
       recognition.start();
-      
     })
 
 }
@@ -83,4 +133,4 @@ let formatDate = (date : Date) => {
 
 
 
-  export {formatDate, setSpeechEventListeners}
+  export {formatDate, webSpeechInit}

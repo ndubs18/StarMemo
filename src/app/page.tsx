@@ -1,48 +1,79 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MemoItem } from './components/MemoItem'
 
 //functions
-import { formatDate, setSpeechEventListeners } from './home';
+import { formatDate, webSpeechInit } from './home';
 
 import Image from "next/image";
 import styles from "./page.module.css";
 
 //types
 import { Memo } from './types/home'
+import { VoiceActivation } from './components/VoiceActivation';
 
 // ! We should look into using https://www.npmjs.com/package/@types/dom-speech-recognition for Web Speech Api types
-declare global {
-  interface Window {
-    SpeechRecognition : any,
-    webkitSpeechRecognition : any,
-    SpeechGrammarList : any,
-    webkitSpeechGrammarList : any,
-    SpeechRecognitionEvent : any,
-    webkitSpeechRecognitionEvent : any
-  }
-}
-
-// const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
-// const SpeechRecognitionEvent = window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
 
 
 export default function Home() {
 
-  //TODO: I don't really like these being variables (not constants), is there a better way to initialize these?
-  //! When defining these globally we get the error "window" not defined and this was a temp workaround
-  let SpeechRecognition = null;
-  let recognition: any = null;
-  let SpeechGrammarList  = null;
-  let SpeechRecognitionEvent  = null;
+// let SpeechRecognition = window?.SpeechRecognition || window.webkitSpeechRecognition;
+// let SpeechGrammarList = window?.SpeechGrammarList || window.webkitSpeechGrammarList;
+//const SpeechRecognitionEvent = window?.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
+
+let recordEvent = new Event('customRecordEvent');
+
+  //button elements
+
+  if(typeof document !== "undefined") {
+  let recordBtn = document.getElementById("recordBtn");
+  let resetBtn = document.getElementById("reset")
+  let submitBtn = document.getElementById("submit");
+  let voiceActivateBtn = document.getElementById("voiceActivateBtn");
+
+  const recordStart = useCallback((event:Event) => {       
+  console.log("Listening from recording button...")
+ }, [])
+
+  const recordEnd = useCallback((event : Event) => {
+    console.log("Ending recording...")
+    //recognition?.stop();
+   }, [])
+
+  const recordResult = useCallback((event : SpeechRecognitionEvent) => { 
+      const words = event.results[0][0].transcript; 
+      setMemoInputText(words)
+     
+    }, [])
+
+  recordBtn?.addEventListener("customRecordEvent", (event : Event) => {
+    console.log("initiated by record button...");
+
+    recognition?.addEventListener("speechstart", recordStart);
+    
+    recognition?.addEventListener("speechend", recordEnd)
+
+    recognition?.addEventListener("result", recordResult)
+
+    try { 
+    recognition?.start();
+    } catch(e) {
+      console.log(e);
+    } 
+  });
+  }
+  
 
   let [memos, setMemos] = useState<Memo[]>([]);
-  let [memoInputText, setMemoInputText] = useState('');
-  let [voiceActivated, setVoiceActivated] = useState(false);
+  let [memoInputText, setMemoInputText] = useState(''); 
+  // let [recognition, setRecognitnion] = useState<SpeechRecognition>(new SpeechRecognition());
+  // let [speechRecognitionList, setSpeechRecognitionList] = useState<SpeechGrammarList>(new SpeechGrammarList());
+  let [recognition, setRecognitnion] = useState<SpeechRecognition | null>(null);
+  let [speechRecognitionList, setSpeechRecognitionList] = useState<SpeechGrammarList | null >(null);
+  //let [isActivated, setIsActivated] = useState(false);
 
-  let recordEvent = new Event('customRecordEvent');
-  let voiceActivationEvent = new Event('customVoiceActivationEvent');
+
 
   function addMemo(formData : any) {
     let id = memos.length;
@@ -57,14 +88,14 @@ export default function Home() {
     setMemos((memos) => {
       return [...memos, newMemo]})
   }
-
-  useEffect(() => {
-    SpeechRecognition = window?.SpeechRecognition || window?.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-
+  
+  useEffect(() => { 
     //this sets event handlers with custom event depending on recording or voice activation
-    setSpeechEventListeners(recognition, setMemoInputText)
-    
+    //webSpeechInit(recognition, speechRecognitionList, isActivated, setMemoInputText, setIsActivated)
+    const SpeechRecognition = window?.SpeechRecognition || window?.webkitSpeechRecognition;
+    const SpeechGrammarList = window?.SpeechGrammarList || window.webkitSpeechGrammarList;
+    setRecognitnion(new SpeechRecognition());
+    setSpeechRecognitionList(new SpeechGrammarList());
   }, [])
 
   return (
@@ -83,12 +114,11 @@ export default function Home() {
                 console.log(e.target);
                 //! This will trigger the audiostart event (handler in ./home.ts) maybe
                 //! we can add some logic to the result to determine whether it's a command or just input text?
-                e.target.dispatchEvent(recordEvent);
-
-                //recognition.start();
+                // recognition.start();
+                e.target.dispatchEvent(recordEvent);   
               }}></input>
-              <input type="reset" value="reset" onClick={() => {setMemoInputText('')}}></input>
-              <input type="submit" value="submit"></input>
+              <input type="reset" id="reset" value="reset"onClick={() => {setMemoInputText('')}}></input>
+              <input type="submit" id="submit" value="submit"></input>
             </div>
           </form>
         </div>
@@ -96,11 +126,14 @@ export default function Home() {
           {memos?.map( memo => <MemoItem key={memo.id} memoItem={memo} memos={memos} setMemos={setMemos}></MemoItem>)}   
         </ul> 
       </section>
-      <button id="voiceActivateBtn" style={{marginTop: "15rem"}} onClick={(e) => {
-        setVoiceActivated(!voiceActivated);
+      {/* <button id="voiceActivateBtn" style={{marginTop: "15rem"}} onClick={!isActivated ? (e) => {
+        setIsActivated(!isActivated);
         e.target.dispatchEvent(voiceActivationEvent);
-      }}>{!voiceActivated ? "Activate Voice Commands" : "Activated"}</button>
+      } : () => {setIsActivated(!isActivated)}}>{!isActivated ? "Activate Voice Commands" : "Activated"}</button> */}
+
+      <VoiceActivation recognition={recognition} speechRecognitionList={speechRecognitionList}/>
       <footer></footer>
     </main>
   );
+  
 }
