@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MemoItem } from './components/MemoItem'
 
 //functions
@@ -24,33 +24,64 @@ export default function Home() {
 
 let recordEvent = new Event('customRecordEvent');
 
+  let [memos, setMemos] = useState<Memo[]>([]);
+  let [memoInputText, setMemoInputText] = useState(''); 
+  let [recognition, setRecognitnion] = useState<SpeechRecognition | null>(null);
+  let [speechRecognitionList, setSpeechRecognitionList] = useState<SpeechGrammarList | null >(null);
+  let isVoiceActivated = useRef<boolean>(false);
+  // let [isVoiceActivated, setIsVoiceActivated] = useState(false);
   //button elements
 
-  if(typeof document !== "undefined") {
-  let recordBtn = document.getElementById("recordBtn");
-  let resetBtn = document.getElementById("reset")
-  let submitBtn = document.getElementById("submit");
-  let voiceActivateBtn = document.getElementById("voiceActivateBtn");
-
-  const recordStart = useCallback((event:Event) => {       
-  console.log("Listening from recording button...")
+  const recordStart = useCallback((event:Event) => {
+  if(isVoiceActivated.current) console.log("listening from voice activated...")
+  else console.log("Listening from recording button...");
  }, [])
 
   const recordEnd = useCallback((event : Event) => {
-    console.log("Ending recording...")
+
+    if(isVoiceActivated.current) {
+      console.log("Ending from voice activated")
+    }
+    else {
+    console.log("Ending recording")
+    }
     //recognition?.stop();
    }, [])
 
   const recordResult = useCallback((event : SpeechRecognitionEvent) => { 
+    if(isVoiceActivated.current) {
+        let recordBtn = document.getElementById("recordBtn");
+        let resetBtn = document.getElementById("reset")
+        let submitBtn = document.getElementById("submit");
+        let voiceActivateBtn = document.getElementById("voiceActivateBtn");
+        const word = event.results[0][0].transcript;
+    
+        if(word === "record" || word == "note") {
+        console.log(`User said: ${word}`);
+        setTimeout(()=> {
+          if(isVoiceActivated) console.log(isVoiceActivated);
+          recordBtn?.click()}, 1000);
+        }
+        else if (word === "reset" || word === "clear" ) {
+        console.log(`User said ${word}`);
+        setTimeout(()=> resetBtn?.click(), 1000);
+        }
+        else if (word === "submit" || word === "save") {
+        setTimeout(() => submitBtn?.click(), 1000);
+        }
+      }
+      else {
       const words = event.results[0][0].transcript; 
-      setMemoInputText(words)
+      setMemoInputText(words);
+      }
      
     }, [])
 
-  recordBtn?.addEventListener("customRecordEvent", (event : Event) => {
-    console.log("initiated by record button...");
 
-    recognition?.addEventListener("speechstart", recordStart);
+
+  window?.addEventListener("customRecordEvent", (event : Event) => {
+
+    recognition?.addEventListener("start", recordStart);
     
     recognition?.addEventListener("speechend", recordEnd)
 
@@ -62,19 +93,8 @@ let recordEvent = new Event('customRecordEvent');
       console.log(e);
     } 
   });
-  }
   
-
-  let [memos, setMemos] = useState<Memo[]>([]);
-  let [memoInputText, setMemoInputText] = useState(''); 
-  // let [recognition, setRecognitnion] = useState<SpeechRecognition>(new SpeechRecognition());
-  // let [speechRecognitionList, setSpeechRecognitionList] = useState<SpeechGrammarList>(new SpeechGrammarList());
-  let [recognition, setRecognitnion] = useState<SpeechRecognition | null>(null);
-  let [speechRecognitionList, setSpeechRecognitionList] = useState<SpeechGrammarList | null >(null);
-  //let [isActivated, setIsActivated] = useState(false);
-
-
-
+  
   function addMemo(formData : any) {
     let id = memos.length;
     const input = formData.get('memoInput');
@@ -107,15 +127,17 @@ let recordEvent = new Event('customRecordEvent');
       <section>
         <div id={styles.memoForm}>
           <form action={addMemo}>
-            <textarea id={styles.memoText} name="memoInput" value={memoInputText} onChange={e => setMemoInputText(e.target.value)} placeholder = "Type or record your memo..." required></textarea>
+            <textarea id={styles.memoText} name="memoInput" value={memoInputText} onChange={e => {setMemoInputText(e.target.value)
+            }} placeholder = "Type or record your memo..." required></textarea>
             <div id={styles.formBtns}>          
               <input type="button" id="recordBtn" value='record' onClick={(e)=> {
                 //! This tells us the record button was hit
-                console.log(e.target);
+                //setIsVoiceActivated(false);
+                isVoiceActivated.current = false;
                 //! This will trigger the audiostart event (handler in ./home.ts) maybe
                 //! we can add some logic to the result to determine whether it's a command or just input text?
                 // recognition.start();
-                e.target.dispatchEvent(recordEvent);   
+                window?.dispatchEvent(recordEvent);   
               }}></input>
               <input type="reset" id="reset" value="reset"onClick={() => {setMemoInputText('')}}></input>
               <input type="submit" id="submit" value="submit"></input>
@@ -126,12 +148,17 @@ let recordEvent = new Event('customRecordEvent');
           {memos?.map( memo => <MemoItem key={memo.id} memoItem={memo} memos={memos} setMemos={setMemos}></MemoItem>)}   
         </ul> 
       </section>
-      {/* <button id="voiceActivateBtn" style={{marginTop: "15rem"}} onClick={!isActivated ? (e) => {
-        setIsActivated(!isActivated);
-        e.target.dispatchEvent(voiceActivationEvent);
-      } : () => {setIsActivated(!isActivated)}}>{!isActivated ? "Activate Voice Commands" : "Activated"}</button> */}
+      <button id="voiceActivateBtn" style={{marginTop: "15rem"}} onClick={!isVoiceActivated.current ? () => {
+        //setIsVoiceActivated(true);
+        isVoiceActivated.current = true;
+        window?.dispatchEvent(recordEvent);
+      } : () => {
+        isVoiceActivated.current = false;
+        
 
-      <VoiceActivation recognition={recognition} speechRecognitionList={speechRecognitionList}/>
+      }}>{!isVoiceActivated.current ? "Activate Voice Commands" : "Activated"}</button>
+
+      {/* <VoiceActivation recognition={recognition} speechRecognitionList={speechRecognitionList} isVoiceActivated={isVoiceActivated} setIsVoiceActivated={setIsVoiceActivated} recordEvent={recordEvent}/> */}
       <footer></footer>
     </main>
   );

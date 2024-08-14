@@ -1,3 +1,4 @@
+'use client'
 import {useState, useEffect, useCallback} from 'react';
 
 const commands = [
@@ -13,13 +14,16 @@ const commands = [
     " | ",
   )};`;
 
-function VoiceActivation({recognition, speechRecognitionList} : {recognition : any, speechRecognitionList : any}) {
+  let num1 = 0.2;
+  let num2 = 0.3;
+
+function VoiceActivation({recognition, speechRecognitionList, isVoiceActivated, setIsVoiceActivated, recordEvent} : {recognition : any, speechRecognitionList : any, isVoiceActivated : boolean, setIsVoiceActivated : (isVoiceActivated : boolean) => void, recordEvent : Event}) {
     
     //const SpeechRecognitionEvent = window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
 
     let voiceActivationEvent = new Event('customVoiceActivationEvent');
 
-    let [isActivated, setIsActivated] = useState(false)
+    // let [isActivated, setIsActivated] = useState(false)
     
     if(typeof document !== "undefined") {
     //button elements
@@ -57,6 +61,8 @@ function VoiceActivation({recognition, speechRecognitionList} : {recognition : a
 
     //voice activation
     voiceActivateBtn?.addEventListener('customVoiceActivationEvent', (event : Event) => {
+ //       recognition.removeEventListener('start', voiceActivateStart);
+  
     
         //grammar list config
         speechRecognitionList.addFromString(grammar,1);
@@ -66,7 +72,7 @@ function VoiceActivation({recognition, speechRecognitionList} : {recognition : a
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
     
-        recognition.addEventListener("speechstart", voiceActivateStart);
+        recognition.addEventListener("start", voiceActivateStart);
         recognition.addEventListener("speechend", voiceActivateEnd);
         recognition.addEventListener("result", voiceActivateResult)
     
@@ -83,11 +89,10 @@ function VoiceActivation({recognition, speechRecognitionList} : {recognition : a
     }
 
    useEffect(() => {}, [])
-   return (<button id="voiceActivateBtn" style={{marginTop: "15rem"}} onClick={!isActivated ? (e) => {
-        setIsActivated(!isActivated);
-        e.target.dispatchEvent(voiceActivationEvent);
-        //recognition.start();
-      } : () => {setIsActivated(!isActivated)}}>{!isActivated ? "Activate Voice Commands" : "Activated"}</button>
+   return (<button id="voiceActivateBtn" style={{marginTop: "15rem"}} onClick={!isVoiceActivated ? (e) => {
+        setIsVoiceActivated(!isVoiceActivated);
+        window.dispatchEvent(recordEvent);
+      } : () => {setIsVoiceActivated(!isVoiceActivated)}}>{!isVoiceActivated ? "Activate Voice Commands" : "Activated"}</button>
     )
 }
 
