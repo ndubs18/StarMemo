@@ -1,101 +1,62 @@
+import { MutableRefObject } from "react";
 import { Memo } from "./types/home"
 
+// * We tried to clean up page.txt by taking out event handler and placing them into closers
+// let recordStartHandler = (recognition : SpeechRecognition | null, isVoiceActivated : MutableRefObject<boolean> ) => {
+//   recognition?.addEventListener('start', (event : Event) => {
+//     if(isVoiceActivated.current) console.log("listening from voice activated...")
+//       else {
+//         console.log("Listening from recording button...")}
+//     },false)
+// }
 
-const commands = [
-  "record",
-  "note",
-  "reset",
-  "clear",
-  "submit",
-  "save",
-]
+// let recordEndHandler = (recognition : SpeechRecognition | null, isVoiceActivated : MutableRefObject<boolean> ) => {
+//   recognition?.addEventListener('speechend', (event : Event) => {
+//     if(isVoiceActivated.current) {
+//       console.log("Ending from voice activated")
+//     }
+//     else {
+//     console.log("Ending recording")
+//     }
+//     },false)
+// }
 
-const grammar = `#JSGF V1.0; grammar colors; public <commands> = ${commands.join(
-  " | ",
-)};`;
+// let recordResultHandler = (recognition : SpeechRecognition | null, isVoiceActivated : MutableRefObject<boolean>, setMemoInputText : (memo : string) => void, setListening : (isListening : boolean) => void ) => {
+//   recognition?.addEventListener('result', (event : SpeechRecognitionEvent) => {
+//     if(isVoiceActivated.current) {
+//       let recordBtn = document.getElementById("recordBtn");
+//       let resetBtn = document.getElementById("reset")
+//       let submitBtn = document.getElementById("submit");
+//       let voiceActivateBtn = document.getElementById("voiceActivateBtn");
+//       const word = event.results[0][0].transcript;
+  
+//       if(word === "record" || word == "note") {
+//       console.log(`User said: ${word}`);
+//       setTimeout(()=> {
+//         if(isVoiceActivated) {
+//           console.log(isVoiceActivated);
+//         } 
+//         recordBtn?.click()}, 1000);
+//       }
+//       else if (word === "reset" || word === "clear" ) {
+//       console.log(`User said ${word}`);
+//       setTimeout(()=> resetBtn?.click(), 1000);
+//       }
+//       else if (word === "submit" || word === "save") {
+//       setTimeout(() => submitBtn?.click(), 1000);
+//       }
+//     }
+//   else {
+//   const words = event.results[0][0].transcript; 
+//   setMemoInputText(words);
+//   }
 
-let webSpeechInit= (recognition : any, speechRecognitionList : any, isActivated : boolean, setMemoInputText : (memos : string) => void, setIsActivated : (isActivated : boolean) => void) => {
+//   setListening(false);
+//     },false)  
+// }
 
 
-      //button elements
-      let recordBtn = document.getElementById("recordBtn");
-      let resetBtn = document.getElementById("reset")
-      let submitBtn = document.getElementById("submit");
-      let voiceActivateBtn = document.getElementById("voiceActivateBtn");
-
-      //record
-      recordBtn?.addEventListener("customRecordEvent", (event : Event) => {
-      console.log("initiated by record button...");
-      
-      recognition.addEventListener("audiostart", function recordStart(event : Event) {
-        console.log("Listening from recording button...")
-        removeEventListener('audiostart', recordStart)
-      
-      })
-
-      recognition.addEventListener("audioend", function recordEnd(event : Event) {
-        console.log("Ending recording...")
-        removeEventListener('audiostart', recordEnd)
-      })
-
-      recognition.addEventListener("result", function recordResult(event : any) {
-        const words = event.results[0][0].transcript;
-        setMemoInputText(words);
-        removeEventListener('audiostart', recordResult)
-      })
-      
-      recognition.start();
-    });
-    
-    //voice activation
-    voiceActivateBtn?.addEventListener('customVoiceActivationEvent', (event : Event) => {
-      
-      //grammar list config
-      speechRecognitionList.addFromString(grammar,1);
-      recognition.grammars = speechRecognitionList;
-      recognition.continuous = false;
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.addEventListener("audiostart", function voiceActivateStart(event : Event) {
-        console.log("Listening from voice activated...") 
-        removeEventListener('audiostart', voiceActivateStart)
-      
-      })
-
-      recognition.addEventListener("audioend", function voiceActivateEnd(event : Event) {
-        console.log("Ending recording from voice activated...")
-        removeEventListener('audiostart', voiceActivateEnd); 
-      })
-
-      recognition.addEventListener("result", function voiceActivateResult(event : any) { 
-        const word = event.results[0][0].transcript;
-
-        if(word === "record" || word == "note") {
-          console.log(`User said: ${word}`);
-          setTimeout(()=> recordBtn?.click(), 1000);
-        }
-        else if (word === "reset" || word === "clear" ) {
-          console.log(`User said ${word}`);
-          setTimeout(()=> resetBtn?.click(), 1000);
-        }
-        else if (word === "submit" || word === "save") {
-          setTimeout(() => submitBtn?.click(), 1000);
-        }
-        //voiceActivateBtn.click();
-        removeEventListener('result', voiceActivateResult);
-      })
-
-      recognition.addEventListener("nomatch", (event : Event) => {
-        console.log("command not recognized");
-      })
-
-      recognition.start();
-    })
-
-}
-
+//! Let's refator this at some point
 let formatDate = (date : Date) => {
     let newDate = '';
     let month = date.getMonth() + 1;
@@ -132,5 +93,5 @@ let formatDate = (date : Date) => {
   }
 
 
-
-  export {formatDate, webSpeechInit}
+export {formatDate}
+  // export {formatDate, recordStartHandler, recordEndHandler, recordResultHandler}
