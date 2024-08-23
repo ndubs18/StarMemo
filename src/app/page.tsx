@@ -23,18 +23,9 @@ const commands = [
   "save",
 ]
 
-const grammar = `#JSGF V1.0; grammar colors; public <commands> = ${commands.join(
+const grammar = `#JSGF V1.0; grammar commands; public <command> = ${commands.join(
 " | "
 )};`;
-
-
-//grammar list config
-// speechRecognitionList.addFromString(grammar,1);
-// recognition.grammars = speechRecognitionList;
-// recognition.continuous = false;
-// recognition.lang = "en-US";
-// recognition.interimResults = false;
-// recognition.maxAlternatives = 1;
 
 export default function Home() {
 
@@ -44,13 +35,11 @@ export default function Home() {
 
   let [memos, setMemos] = useState<Memo[]>([]);
   let [memoInputText, setMemoInputText] = useState(''); 
-  let [recognition, setRecognitnion] = useState<SpeechRecognition | null>(null);
-  let [speechRecognitionList, setSpeechRecognitionList] = useState<SpeechGrammarList | null >(null);
   let [listening, setListening] = useState(false);
 
   //TODO: Try initializing a ref instead of state variable
-  // let recognitionRef = useRef(null);
-  // let speechRecognitionListRef = useRef(null);
+  let recognitionRef = useRef<SpeechRecognition>();
+  let speechRecognitionListRef = useRef<SpeechGrammarList>();
 
   let isVoiceActivated = useRef<boolean>(false);
 
@@ -78,22 +67,41 @@ export default function Home() {
         let resetBtn = document.getElementById("reset")
         let submitBtn = document.getElementById("submit");
         let voiceActivateBtn = document.getElementById("voiceActivateBtn");
-        const word = event.results[0][0].transcript;
-    
-        if(word == "record" || word == "note") {
-        console.log(`User said: ${word}`);
-        setTimeout(()=> {
-          if(isVoiceActivated.current) {
-            console.log("transitioning")
+        const result = event.results[0][0].transcript;
+        let resultSplit = result.split(" ");
+        
+        //* Trying to delete or play a memo requires the id which is a number
+        //* Speech recognition interprets numbers with their spelling so idk if we can do this.
+        if(resultSplit.length === 2) {
+          const memoIdToDelete = parseInt(resultSplit[1])
+          if(resultSplit[0] === "delete" || resultSplit[0] === "remove") {
+            console.log("removing memo...");
+            
+            let newMemos = memos.filter((memo, i) => {
+              if(memo.id !== memoIdToDelete - 1) {
+                return memo;
+              }
+            })
+
+            setMemos(newMemos);
+          }
+        }
+        else { 
+          if(result == "record" || result == "note") {
+          console.log(`User said: ${result}`);
+          setTimeout(()=> {
+            recordBtn?.click()}, 1000);
+          }
+          else if (result === "reset" || result === "clear" ) {
+          console.log(`User said ${result}`);
+          setTimeout(()=> resetBtn?.click(), 1000);
+          }
+          else if (result === "submit" || result === "save") {
+          setTimeout(() => submitBtn?.click(), 1000);
           } 
-          recordBtn?.click()}, 1000);
-        }
-        else if (word === "reset" || word === "clear" ) {
-        console.log(`User said ${word}`);
-        setTimeout(()=> resetBtn?.click(), 1000);
-        }
-        else if (word === "submit" || word === "save") {
-        setTimeout(() => submitBtn?.click(), 1000);
+          else {
+            console.log("could not match")
+          }
         }
     }
     else {
@@ -104,17 +112,26 @@ export default function Home() {
     setListening(false);
      
   }, [])
-  //clusres for trying to clean up event handlers ^
-  // recordStartHandler(recognition, isVoiceActivated)
-  // recordEndHandler(recognition, isVoiceActivated);
-  // recordResultHandler(recognition, isVoiceActivated, setMemoInputText, setListening)
 
-  recognition?.addEventListener("start", recordStart);
-  recognition?.addEventListener("speechend", recordEnd)
-  recognition?.addEventListener("result", recordResult)  
+  const onNoMatch = useCallback((event : SpeechRecognitionEvent) => {
+    console.error("There was no match with what the user said and grammar list");
+  }, [])
 
-  recognition?.addEventListener("nomatch", (e) => {
-    console.log("No match!?!?!?")})
+  const onError = useCallback((event : SpeechRecognitionErrorEvent) => {
+    console.log(event.error)
+  }, [])
+
+  const onSpeechEnd = useCallback((event : Event) => {
+    console.log("ending speech recognition");
+    recognitionRef.current?.stop()
+  }, [])
+
+  recognitionRef.current?.addEventListener("start", recordStart);
+  recognitionRef.current?.addEventListener("speechend", recordEnd)
+  recognitionRef.current?.addEventListener("result", recordResult)  
+  recognitionRef.current?.addEventListener("speechend", onSpeechEnd)
+  recognitionRef.current?.addEventListener("nomatch", onNoMatch);
+  recognitionRef.current?.addEventListener("error", onError);
    
   function addMemo(formData : any) {
     let id = memos.length;
@@ -133,8 +150,20 @@ export default function Home() {
   useEffect(() => { 
     const SpeechRecognition = window?.SpeechRecognition || window?.webkitSpeechRecognition;
     const SpeechGrammarList = window?.SpeechGrammarList || window.webkitSpeechGrammarList;
-    setRecognitnion(new SpeechRecognition());
-    setSpeechRecognitionList(new SpeechGrammarList());
+    
+    recognitionRef.current = new webkitSpeechRecognition() || new SpeechRecognition();
+    speechRecognitionListRef.current = new SpeechGrammarList();
+
+    //grammar list config
+    speechRecognitionListRef?.current.addFromString(grammar, 1)
+    recognitionRef.current.grammars = speechRecognitionListRef.current;
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.lang = "en-US";
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.maxAlternatives = 1;
+    return () => {
+      recognitionRef.current?.stop();
+    }
   }, [])
 
   return (
@@ -152,10 +181,10 @@ export default function Home() {
               <input type="button" id="recordBtn" value='record' onClick={(e)=> {
                 isVoiceActivated.current = false;
                 setListening(true);
-                recognition?.start();
+                recognitionRef.current?.start();
                 //window?.dispatchEvent(recordEvent);   
               }}></input>
-              <input type="reset" id="reset" value="reset"onClick={() => {setMemoInputText('')}}></input>
+              <input type="reset" id="reset" value="reset" onClick={() => {setMemoInputText('')}}></input>
               <input type="submit" id="submit" value="submit"></input>
             </div>
           </form>
@@ -169,10 +198,12 @@ export default function Home() {
     <button id="voiceActivateBtn" style={{marginTop: "1.25rem"}} onClick={!isVoiceActivated.current ? () => { 
         isVoiceActivated.current = true;
         setListening(true);
-        recognition?.start();
-        //window?.dispatchEvent(recordEvent);
+        recognitionRef.current?.start();
       } : () => {
         isVoiceActivated.current = false;
+        setListening(false);
+        recognitionRef.current?.abort()
+        //TODO: We need to add logic to display Activate only when isVoiceActivate == true && listenning == true
       }}>{!listening ? "Activate Voice Commands" : "Activated"}</button>
       <footer></footer>
     </main>
