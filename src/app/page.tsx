@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { MemoItem } from './components/MemoItem'
 
 //functions
-import { formatDate } from './home';
+import { formatDate, getNum, nums } from './home';
 
 import Image from "next/image";
 import starIcon from "../../public/Free White Shiny Star Vector.svg"
@@ -70,20 +70,13 @@ export default function Home() {
         const result = event.results[0][0].transcript;
         let resultSplit = result.split(" ");
         
-        //* Trying to delete or play a memo requires the id which is a number
-        //* Speech recognition interprets numbers with their spelling so idk if we can do this.
         if(resultSplit.length === 2) {
-          const memoIdToDelete = parseInt(resultSplit[1])
+          let fullMemoIdToDelete = resultSplit[1]
+          let memoIdToDelete = getNum(fullMemoIdToDelete as keyof typeof nums);
           if(resultSplit[0] === "delete" || resultSplit[0] === "remove") {
-            console.log("removing memo...");
-            
-            let newMemos = memos.filter((memo, i) => {
-              if(memo.id !== memoIdToDelete - 1) {
-                return memo;
-              }
+            setMemos(prevMemos => {
+              return prevMemos.filter((memo, i) => memo.id + 1 !== memoIdToDelete)
             })
-
-            setMemos(newMemos);
           }
         }
         else { 

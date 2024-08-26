@@ -1,5 +1,5 @@
 import { MutableRefObject } from "react";
-import { Memo } from "./types/home"
+import { Memo, Nums } from "./types/home"
 
 // * We tried to clean up page.txt by taking out event handler and placing them into closers
 // let recordStartHandler = (recognition : SpeechRecognition | null, isVoiceActivated : MutableRefObject<boolean> ) => {
@@ -55,6 +55,18 @@ import { Memo } from "./types/home"
 //     },false)  
 // }
 
+const nums : Nums = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10
+};
 
 //! Let's refator this at some point
 let formatDate = (date : Date) => {
@@ -92,6 +104,16 @@ let formatDate = (date : Date) => {
 
   }
 
+  let getNum = (speechNum : keyof typeof nums) => {
+    if(!nums[speechNum]) {
+      return 0;
+    }
+    
+    else {
+      return nums[speechNum];
+    }
 
-export {formatDate}
+  }
+
+export {formatDate, getNum, nums}
   // export {formatDate, recordStartHandler, recordEndHandler, recordResultHandler}
