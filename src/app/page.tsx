@@ -183,7 +183,7 @@ export default function Home() {
         </ul> 
     </section>
     <h3>Click me to use a voice command!</h3>
-    <p>Say somoething like 'record' 'reset' 'save' or 'delete &lt;memo number&gt;' to interact with StarMemo</p>
+    <p>Say somoething like &lsquo;record&rsqo; &lsquo;reset&rsquo; &lsquo;save&rsquo; or &lsquo;delete &lt;memo number&gt;&rsquo; to interact with StarMemo</p>
     <button id="voiceActivateBtn" style={{marginTop: "1.25rem"}} onClick={!isVoiceActivated.current ? () => { 
         isVoiceActivated.current = true;
         setListening(true);
