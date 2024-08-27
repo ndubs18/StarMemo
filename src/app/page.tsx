@@ -70,6 +70,8 @@ export default function Home() {
         const result = event.results[0][0].transcript;
         let resultSplit = result.split(" ");
         
+        //* Trying to delete or play a memo requires the id which is a number
+        //* Speech recognition interprets numbers with their spelling so idk if we can do this.
         if(resultSplit.length === 2) {
           let fullMemoIdToDelete = resultSplit[1]
           let memoIdToDelete = getNum(fullMemoIdToDelete as keyof typeof nums);
@@ -101,9 +103,6 @@ export default function Home() {
     const words = event.results[0][0].transcript; 
     setMemoInputText(words);
     }
-
-    setListening(false);
-     
   }, [])
 
   const onNoMatch = useCallback((event : SpeechRecognitionEvent) => {
@@ -116,6 +115,8 @@ export default function Home() {
 
   const onSpeechEnd = useCallback((event : Event) => {
     console.log("ending speech recognition");
+    setListening(false);
+    isVoiceActivated.current = false; 
     recognitionRef.current?.stop()
   }, [])
 
@@ -175,7 +176,6 @@ export default function Home() {
                 isVoiceActivated.current = false;
                 setListening(true);
                 recognitionRef.current?.start();
-                //window?.dispatchEvent(recordEvent);   
               }}></input>
               <input type="reset" id="reset" value="reset" onClick={() => {setMemoInputText('')}}></input>
               <input type="submit" id="submit" value="submit"></input>
@@ -187,7 +187,7 @@ export default function Home() {
         </ul> 
     </section>
     <h3>Click me to use a voice command!</h3>
-    <p>Say somoething like 'record' 'reset' or 'save' to interact with StarMemo</p>
+    <p>Say somoething like 'record' 'reset' 'save' or 'delete &lt;memo number&gt;' to interact with StarMemo</p>
     <button id="voiceActivateBtn" style={{marginTop: "1.25rem"}} onClick={!isVoiceActivated.current ? () => { 
         isVoiceActivated.current = true;
         setListening(true);
