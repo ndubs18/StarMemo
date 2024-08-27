@@ -1,60 +1,6 @@
 import { MutableRefObject } from "react";
 import { Memo, Nums } from "./types/home"
 
-// * We tried to clean up page.txt by taking out event handler and placing them into closers
-// let recordStartHandler = (recognition : SpeechRecognition | null, isVoiceActivated : MutableRefObject<boolean> ) => {
-//   recognition?.addEventListener('start', (event : Event) => {
-//     if(isVoiceActivated.current) console.log("listening from voice activated...")
-//       else {
-//         console.log("Listening from recording button...")}
-//     },false)
-// }
-
-// let recordEndHandler = (recognition : SpeechRecognition | null, isVoiceActivated : MutableRefObject<boolean> ) => {
-//   recognition?.addEventListener('speechend', (event : Event) => {
-//     if(isVoiceActivated.current) {
-//       console.log("Ending from voice activated")
-//     }
-//     else {
-//     console.log("Ending recording")
-//     }
-//     },false)
-// }
-
-// let recordResultHandler = (recognition : SpeechRecognition | null, isVoiceActivated : MutableRefObject<boolean>, setMemoInputText : (memo : string) => void, setListening : (isListening : boolean) => void ) => {
-//   recognition?.addEventListener('result', (event : SpeechRecognitionEvent) => {
-//     if(isVoiceActivated.current) {
-//       let recordBtn = document.getElementById("recordBtn");
-//       let resetBtn = document.getElementById("reset")
-//       let submitBtn = document.getElementById("submit");
-//       let voiceActivateBtn = document.getElementById("voiceActivateBtn");
-//       const word = event.results[0][0].transcript;
-  
-//       if(word === "record" || word == "note") {
-//       console.log(`User said: ${word}`);
-//       setTimeout(()=> {
-//         if(isVoiceActivated) {
-//           console.log(isVoiceActivated);
-//         } 
-//         recordBtn?.click()}, 1000);
-//       }
-//       else if (word === "reset" || word === "clear" ) {
-//       console.log(`User said ${word}`);
-//       setTimeout(()=> resetBtn?.click(), 1000);
-//       }
-//       else if (word === "submit" || word === "save") {
-//       setTimeout(() => submitBtn?.click(), 1000);
-//       }
-//     }
-//   else {
-//   const words = event.results[0][0].transcript; 
-//   setMemoInputText(words);
-//   }
-
-//   setListening(false);
-//     },false)  
-// }
-
 const nums : Nums = {
   one: 1,
   two: 2,

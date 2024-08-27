@@ -29,22 +29,17 @@ const grammar = `#JSGF V1.0; grammar commands; public <command> = ${commands.joi
 
 export default function Home() {
 
-// let SpeechRecognition = window?.SpeechRecognition || window.webkitSpeechRecognition;
-// let SpeechGrammarList = window?.SpeechGrammarList || window.webkitSpeechGrammarList;
-//const SpeechRecognitionEvent = window?.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
-
   let [memos, setMemos] = useState<Memo[]>([]);
   let [memoInputText, setMemoInputText] = useState(''); 
   let [listening, setListening] = useState(false);
 
-  //TODO: Try initializing a ref instead of state variable
   let recognitionRef = useRef<SpeechRecognition>();
   let speechRecognitionListRef = useRef<SpeechGrammarList>();
-
   let isVoiceActivated = useRef<boolean>(false);
 
-//! We can just uncomment these and event listener on 107 to bring back to what we had before. Trying to use closures
-//! to clean things up
+  /*
+  /// THIS IS OUR FULFILLMENT AND INTERACTION MODEL CODE
+  */
   const recordStart = useCallback((event:Event) => {
   if(isVoiceActivated.current) console.log("listening from voice activated...")
   else {
@@ -70,8 +65,6 @@ export default function Home() {
         const result = event.results[0][0].transcript;
         let resultSplit = result.split(" ");
         
-        //* Trying to delete or play a memo requires the id which is a number
-        //* Speech recognition interprets numbers with their spelling so idk if we can do this.
         if(resultSplit.length === 2) {
           let fullMemoIdToDelete = resultSplit[1]
           let memoIdToDelete = getNum(fullMemoIdToDelete as keyof typeof nums);
@@ -105,6 +98,7 @@ export default function Home() {
     }
   }, [])
 
+
   const onNoMatch = useCallback((event : SpeechRecognitionEvent) => {
     console.error("There was no match with what the user said and grammar list");
   }, [])
@@ -127,6 +121,8 @@ export default function Home() {
   recognitionRef.current?.addEventListener("nomatch", onNoMatch);
   recognitionRef.current?.addEventListener("error", onError);
    
+  /* ---------- */
+
   function addMemo(formData : any) {
     let id = memos.length;
     const input = formData.get('memoInput');
