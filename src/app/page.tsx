@@ -6,13 +6,10 @@ import { MemoItem } from './components/MemoItem'
 //functions
 import { formatDate, getNum, nums } from './home';
 
-import Image from "next/image";
-import starIcon from "../../public/Free White Shiny Star Vector.svg"
 import styles from "./page.module.css";
 
 //types
 import { Memo } from './types/home'
-//import { VoiceActivation } from './components/VoiceActivation';
 
 const commands = [
   "record",
