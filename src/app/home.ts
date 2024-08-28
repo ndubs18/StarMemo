@@ -1,4 +1,4 @@
-import {Nums } from "./types/home"
+import { Nums } from "./types/home"
 
 const nums : Nums = {
   one: 1,
@@ -13,7 +13,7 @@ const nums : Nums = {
   ten: 10
 };
 
-//! Let's refator this at some point
+//! Let's refactor this at some point
 let formatDate = (date : Date) => {
     let newDate = '';
     let month = date.getMonth() + 1;
@@ -44,7 +44,7 @@ let formatDate = (date : Date) => {
         secondsString = '0' + secondsString;
     }
 
-    newDate = `${month}/${day}/${year} ${hoursString}:${minutesString}:${secondsString}`
+    newDate = `${monthString}/${dayString}/${yearString} ${hoursString}:${minutesString}:${secondsString}`
     return newDate;
 
   }
