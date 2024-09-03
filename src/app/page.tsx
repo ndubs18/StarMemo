@@ -47,10 +47,14 @@ export default function Home() {
 
     if(isVoiceActivated.current) {
       console.log("Ending from voice activated")
+      setListening(false);
+      isVoiceActivated.current = false; 
     }
     else {
     console.log("Ending recording")
+    setListening(false);
     }
+    recognitionRef.current?.stop()
    }, [])
 
   const recordResult = useCallback((event : SpeechRecognitionEvent) => { 
@@ -104,17 +108,9 @@ export default function Home() {
     console.log(event.error)
   }, [])
 
-  const onSpeechEnd = useCallback((event : Event) => {
-    console.log("ending speech recognition");
-    setListening(false);
-    isVoiceActivated.current = false; 
-    recognitionRef.current?.stop()
-  }, [])
-
   recognitionRef.current?.addEventListener("start", recordStart);
   recognitionRef.current?.addEventListener("speechend", recordEnd)
   recognitionRef.current?.addEventListener("result", recordResult)  
-  recognitionRef.current?.addEventListener("speechend", onSpeechEnd)
   recognitionRef.current?.addEventListener("nomatch", onNoMatch);
   recognitionRef.current?.addEventListener("error", onError);
    

@@ -1,5 +1,6 @@
 import { Nums } from "./types/home"
 
+
 const nums : Nums = {
   one: 1,
   two: 2,
